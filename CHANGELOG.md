@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Update Codex's SQLite recency metadata so bumped chats actually return to the top of current history views.
+- Write the current Codex turn-start event alongside the synthetic `hi` turn.
+- Add a configurable SQLite home for non-default Codex state locations.
+
 ## 0.1.1
 
 - Infer missing chat names from saved thread-name events or the first user message.

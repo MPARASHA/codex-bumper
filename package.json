@@ -2,7 +2,7 @@
   "name": "codex-bumper",
   "displayName": "Codex Bumper",
   "description": "Unofficial VS Code/Antigravity extension for browsing local Codex chats and bumping them back into recent history.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "mparasha",
   "icon": "resources/codex-bumper.png",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "vscode"
   ],
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.107.0"
   },
   "categories": [
     "Other"
@@ -97,6 +97,11 @@
           "default": "",
           "description": "Optional override for the Codex home directory. Defaults to ~/.codex."
         },
+        "codexBumper.sqliteHome": {
+          "type": "string",
+          "default": "",
+          "description": "Optional override for the directory containing Codex state_5.sqlite. Defaults to CODEX_SQLITE_HOME or the Codex home directory."
+        },
         "codexBumper.bumpAssistantReply": {
           "type": "string",
           "default": "Hi. I'm here.",
@@ -107,6 +112,7 @@
   },
   "scripts": {
     "compile": "tsc -p ./",
+    "test": "npm run compile && node --test test/*.test.js",
     "watch": "tsc -watch -p ./",
     "package": "vsce package --no-dependencies"
   },

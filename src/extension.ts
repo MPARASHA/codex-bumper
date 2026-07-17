@@ -5,6 +5,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as readline from 'node:readline';
 import * as vscode from 'vscode';
+import { updateThreadRecency } from './stateDb';
 
 interface ChatEntry {
   id: string;
@@ -38,14 +39,18 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     }),
     vscode.commands.registerCommand('codexBumper.bumpChat', async (item?: ChatItem | string) => {
-      const chat = await resolveChat(store, item);
-      if (!chat) {
-        return;
-      }
+      try {
+        const chat = await resolveChat(store, item);
+        if (!chat) {
+          return;
+        }
 
-      const bumped = await store.bumpChat(chat);
-      provider.refresh();
-      vscode.window.showInformationMessage(`Bumped "${bumped.title}" with hi.`);
+        const bumped = await store.bumpChat(chat);
+        provider.refresh();
+        vscode.window.showInformationMessage(`Bumped "${bumped.title}" with hi.`);
+      } catch (error) {
+        vscode.window.showErrorMessage(`Codex Bumper could not bump the chat: ${errorMessage(error)}`);
+      }
     })
   );
 }
@@ -194,6 +199,17 @@ class CodexHistoryStore {
     const records = [
       {
         timestamp: nowIso,
+        type: 'event_msg',
+        payload: {
+          type: 'task_started',
+          turn_id: turnId,
+          started_at: Math.floor(now.getTime() / 1000),
+          model_context_window: null,
+          collaboration_mode_kind: 'default'
+        }
+      },
+      {
+        timestamp: nowIso,
         type: 'response_item',
         payload: {
           type: 'message',
@@ -251,10 +267,12 @@ class CodexHistoryStore {
 
     await fs.appendFile(sessionPath, `${records.map((record) => JSON.stringify(record)).join('\n')}\n`, 'utf8');
 
+    const stateUpdate = updateThreadRecency(this.stateDbPath(), chat.id, now);
+
     const fresh: ChatEntry = {
       ...chat,
       sessionPath,
-      updatedAt: nowIso
+      updatedAt: new Date(stateUpdate?.updatedAtMs ?? now.getTime()).toISOString()
     };
     await this.appendIndexEntry(fresh);
     return fresh;
@@ -267,6 +285,12 @@ class CodexHistoryStore {
     }
 
     return process.env.CODEX_HOME ? expandHome(process.env.CODEX_HOME) : path.join(os.homedir(), '.codex');
+  }
+
+  private stateDbPath(): string {
+    const configured = vscode.workspace.getConfiguration(CONFIG_SECTION).get<string>('sqliteHome', '').trim();
+    const sqliteHome = configured || process.env.CODEX_SQLITE_HOME;
+    return path.join(sqliteHome ? expandHome(sqliteHome) : this.codexHome(), 'state_5.sqlite');
   }
 
   private async appendIndexEntry(chat: ChatEntry): Promise<void> {
@@ -592,4 +616,8 @@ function safeJsonParse(line: string): any | undefined {
 
 function isNotFound(error: unknown): boolean {
   return Boolean(error && typeof error === 'object' && (error as NodeJS.ErrnoException).code === 'ENOENT');
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

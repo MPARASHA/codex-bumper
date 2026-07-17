@@ -14,7 +14,7 @@
 
 Codex Bumper is an unofficial VS Code and Antigravity extension for people who rely on local Codex chat history and occasionally lose precious context because an older chat falls out of the visible recent list.
 
-Codex may keep older saved sessions locally while only showing a recent subset in the picker or app history. When that happens, a chat can feel missing even though the conversation file is still in `~/.codex/sessions`. Codex Bumper gives you a small browser for those local chats and a one-click bump button that says `hi` to the selected chat and appends a fresh `session_index.jsonl` entry so the chat can move back into recent history.
+Codex may keep older saved sessions locally while only showing a recent subset in the picker or app history. When that happens, a chat can feel missing even though the conversation file is still in `~/.codex/sessions`. Codex Bumper gives you a small browser for those local chats and a one-click bump button that says `hi` to the selected chat, updates its local history metadata, and moves it back into recent history.
 
 ## What It Does
 
@@ -23,7 +23,7 @@ Codex may keep older saved sessions locally while only showing a recent subset i
 - Opens a readable transcript for a selected chat.
 - Adds a **Bump: say hi** action for each chat.
 - Bumping writes a tiny `hi` user turn plus assistant reply into the saved session file.
-- Bumping also appends a fresh row to `session_index.jsonl`, using the current timestamp.
+- Bumping updates both the legacy `session_index.jsonl` index and the current Codex SQLite recency metadata.
 - Works for default Codex installs and lets users override the Codex home path.
 
 ## Why This Exists
@@ -50,7 +50,7 @@ code --install-extension mparasha.codex-bumper
 
 ## Requirements
 
-- VS Code, Antigravity, or another VS Code-compatible IDE on macOS, Linux, or Windows.
+- VS Code 1.107+, Antigravity, or another compatible IDE on macOS, Linux, or Windows.
 - Codex installed locally.
 - Local Codex history stored under `~/.codex`, or a custom path configured with `codexBumper.codexHome`.
 
@@ -66,6 +66,7 @@ For WSL, containers, and remote workspaces, Codex Bumper must run where the Code
 ## Settings
 
 - `codexBumper.codexHome`: optional override for the Codex home directory. Defaults to `~/.codex`.
+- `codexBumper.sqliteHome`: optional override for the directory containing `state_5.sqlite`. Defaults to `CODEX_SQLITE_HOME`, then the Codex home directory.
 - `codexBumper.bumpAssistantReply`: reply text written with the bump turn. Defaults to `Hi. I'm here.`
 
 ## Safety Notes
@@ -74,6 +75,7 @@ Codex Bumper only edits local Codex history files:
 
 - `session_index.jsonl`
 - matching `sessions/**/*.jsonl`
+- `state_5.sqlite` history timestamps for the matching thread
 
 It does not call Codex models, send network requests, read workspace source files, or modify any project repository.
 
@@ -90,7 +92,7 @@ npm run package
 The generated `.vsix` can be installed into Antigravity with:
 
 ```bash
-antigravity --install-extension codex-bumper-0.1.1.vsix
+antigravity --install-extension codex-bumper-0.1.2.vsix
 ```
 
 Publishing a GitHub release runs the repository's publish workflow for both Visual Studio Marketplace and Open VSX. An ordinary push to GitHub does not publish a marketplace update.
