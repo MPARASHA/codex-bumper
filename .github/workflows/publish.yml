@@ -1,0 +1,51 @@
+name: Publish Extension
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  vscode-marketplace:
+    name: Visual Studio Marketplace
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile
+        run: npm run compile
+
+      - name: Capture package version
+        id: package
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Package VSIX
+        run: npm run package
+
+      - name: Publish to Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          if [ -z "$VSCE_PAT" ]; then
+            echo "Missing VSCE_PAT. Add a Marketplace PAT authorized for publisher mparasha as a repository secret."
+            exit 1
+          fi
+
+          npx vsce publish \
+            -i "codex-bumper-${{ steps.package.outputs.version }}.vsix" \
+            --skip-duplicate
