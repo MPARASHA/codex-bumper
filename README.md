@@ -1,5 +1,17 @@
 # Codex Bumper
 
+<p align="center">
+  <img src="resources/codex-bumper.png" alt="Codex Bumper extension logo" width="160">
+</p>
+
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=mparasha.codex-bumper">Visual Studio Marketplace</a>
+  |
+  <a href="https://open-vsx.org/extension/mparasha/codex-bumper">Open VSX Registry</a>
+  |
+  <a href="https://github.com/MPARASHA/codex-bumper/releases/latest">Latest VSIX</a>
+</p>
+
 Codex Bumper is an unofficial VS Code and Antigravity extension for people who rely on local Codex chat history and occasionally lose precious context because an older chat falls out of the visible recent list.
 
 Codex may keep older saved sessions locally while only showing a recent subset in the picker or app history. When that happens, a chat can feel missing even though the conversation file is still in `~/.codex/sessions`. Codex Bumper gives you a small browser for those local chats and a one-click bump button that says `hi` to the selected chat and appends a fresh `session_index.jsonl` entry so the chat can move back into recent history.
@@ -17,6 +29,24 @@ Codex may keep older saved sessions locally while only showing a recent subset i
 ## Why This Exists
 
 Some Codex conversations contain hard-won debugging context: a VM recovery, a payer investigation, an EOB fetch flow, a long code review, or an exact sequence of decisions. If the chat is not visible in the latest history window, finding it manually is slow. This extension is for bringing that context back to the surface without hand-editing JSONL files.
+
+## Install
+
+Codex Bumper is published in both major VS Code extension registries:
+
+| Editor | Registry | Install |
+| --- | --- | --- |
+| Antigravity | [Open VSX](https://open-vsx.org/extension/mparasha/codex-bumper) | Open **Extensions**, search for `Codex Bumper`, and select **Install**. |
+| Visual Studio Code | [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=mparasha.codex-bumper) | Open **Extensions**, search for `Codex Bumper`, and select **Install**. |
+| Other VS Code-compatible editors | Open VSX or VSIX | Use the editor's extension search or install the [latest VSIX](https://github.com/MPARASHA/codex-bumper/releases/latest). |
+
+Antigravity uses Open VSX as its extension registry, so the Open VSX listing is the normal install and update path for Antigravity users. Registry installations can receive new Codex Bumper versions through the editor's usual extension update mechanism.
+
+VS Code users can also install it from a terminal:
+
+```bash
+code --install-extension mparasha.codex-bumper
+```
 
 ## Requirements
 
@@ -62,6 +92,8 @@ The generated `.vsix` can be installed into Antigravity with:
 ```bash
 antigravity --install-extension codex-bumper-0.1.1.vsix
 ```
+
+Publishing a GitHub release runs the repository's publish workflow for both Visual Studio Marketplace and Open VSX. An ordinary push to GitHub does not publish a marketplace update.
 
 ## License
 
