@@ -1,0 +1,78 @@
+body {
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editor-background);
+  font: var(--vscode-font-size) var(--vscode-font-family);
+  margin: 0;
+}
+
+header {
+  align-items: center;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 14px 18px;
+  position: sticky;
+  top: 0;
+  background: var(--vscode-editor-background);
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0 0 4px;
+}
+
+p {
+  color: var(--vscode-descriptionForeground);
+  margin: 0;
+}
+
+.button {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  padding: 6px 10px;
+  text-decoration: none;
+}
+
+.button:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+main {
+  padding: 14px 18px 32px;
+}
+
+.message {
+  border: 1px solid var(--vscode-panel-border);
+  margin-bottom: 12px;
+}
+
+.meta {
+  background: var(--vscode-editorWidget-background);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  padding: 6px 8px;
+  text-transform: uppercase;
+}
+
+pre {
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+  line-height: 1.45;
+  margin: 0;
+  overflow-x: auto;
+  padding: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.user {
+  border-left: 3px solid var(--vscode-textLink-foreground);
+}
+
+.assistant {
+  border-left: 3px solid var(--vscode-testing-iconPassed);
+}

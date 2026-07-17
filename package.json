@@ -1,0 +1,118 @@
+{
+  "name": "codex-bumper",
+  "displayName": "Codex Bumper",
+  "description": "VS Code/Antigravity extension for browsing local Codex chats and bumping them back into recent history.",
+  "version": "0.1.0",
+  "publisher": "mparasha",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MPARASHA/codex-bumper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MPARASHA/codex-bumper/issues"
+  },
+  "homepage": "https://github.com/MPARASHA/codex-bumper#readme",
+  "keywords": [
+    "codex",
+    "history",
+    "chat",
+    "antigravity",
+    "vscode"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:codexBumper.chats",
+    "onCommand:codexBumper.refresh",
+    "onCommand:codexBumper.openChat",
+    "onCommand:codexBumper.bumpChat"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codexBumper",
+          "title": "Codex Bumper",
+          "icon": "resources/codex-bumper.svg"
+        }
+      ]
+    },
+    "views": {
+      "codexBumper": [
+        {
+          "id": "codexBumper.chats",
+          "name": "Chats"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "codexBumper.refresh",
+        "title": "Codex Bumper: Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "codexBumper.openChat",
+        "title": "Codex Bumper: Open Chat"
+      },
+      {
+        "command": "codexBumper.bumpChat",
+        "title": "Codex Bumper: Bump Chat",
+        "icon": "$(arrow-up)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "codexBumper.refresh",
+          "when": "view == codexBumper.chats",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "codexBumper.openChat",
+          "when": "view == codexBumper.chats && viewItem == codexChat",
+          "group": "inline@1"
+        },
+        {
+          "command": "codexBumper.bumpChat",
+          "when": "view == codexBumper.chats && viewItem == codexChat",
+          "group": "inline@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Codex Bumper",
+      "properties": {
+        "codexBumper.codexHome": {
+          "type": "string",
+          "default": "",
+          "description": "Optional override for the Codex home directory. Defaults to ~/.codex."
+        },
+        "codexBumper.bumpAssistantReply": {
+          "type": "string",
+          "default": "Hi. I'm here.",
+          "description": "Assistant reply written when bumping a chat."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.6.0",
+    "typescript": "^5.8.0"
+  }
+}
