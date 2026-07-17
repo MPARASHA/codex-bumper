@@ -6,8 +6,8 @@ on:
     types: [published]
 
 jobs:
-  vscode-marketplace:
-    name: Visual Studio Marketplace
+  registries:
+    name: Extension registries
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -48,4 +48,18 @@ jobs:
 
           npx vsce publish \
             -i "codex-bumper-${{ steps.package.outputs.version }}.vsix" \
+            --skip-duplicate
+
+      - name: Publish to Open VSX
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          if [ -z "$OVSX_PAT" ]; then
+            echo "Missing OVSX_PAT. Add an Open VSX access token as a repository secret."
+            exit 1
+          fi
+
+          npx --yes ovsx@1.0.2 publish \
+            "codex-bumper-${{ steps.package.outputs.version }}.vsix" \
+            --pat "$OVSX_PAT" \
             --skip-duplicate

@@ -24,7 +24,7 @@ The current package uses publisher id `mparasha`, so the PAT must be authorized 
 
 ### GitHub Actions
 
-Add the token as a repository secret named `VSCE_PAT`, then run the **Publish Extension** workflow from GitHub Actions. The workflow also runs whenever a new GitHub release is published.
+Add the token as a repository secret named `VSCE_PAT`. A normal code push does not publish an extension; the **Publish Extension** workflow runs manually or whenever a new GitHub release is published.
 
 ### Local Publish
 
@@ -32,5 +32,18 @@ After setting the token locally:
 
 ```bash
 export VSCE_PAT="..."
-npx vsce publish -i codex-bumper-0.1.0.vsix --skip-duplicate
+npx vsce publish -i codex-bumper-X.Y.Z.vsix --skip-duplicate
+```
+
+## Open VSX
+
+Sign in at https://open-vsx.org, connect an Eclipse account, accept the Publisher Agreement, and create an access token. The package publisher is `mparasha`, so the same namespace must exist on Open VSX.
+
+Add the token as a repository secret named `OVSX_PAT`. The same GitHub workflow publishes the packaged VSIX to Open VSX after publishing it to the Visual Studio Marketplace.
+
+For a local publish:
+
+```bash
+export OVSX_PAT="..."
+npx --yes ovsx@1.0.2 publish codex-bumper-X.Y.Z.vsix --pat "$OVSX_PAT" --skip-duplicate
 ```

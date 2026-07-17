@@ -1,9 +1,10 @@
 {
   "name": "codex-bumper",
   "displayName": "Codex Bumper",
-  "description": "VS Code/Antigravity extension for browsing local Codex chats and bumping them back into recent history.",
-  "version": "0.1.0",
+  "description": "Unofficial VS Code/Antigravity extension for browsing local Codex chats and bumping them back into recent history.",
+  "version": "0.1.1",
   "publisher": "mparasha",
+  "icon": "resources/codex-bumper.png",
   "license": "MIT",
   "repository": {
     "type": "git",

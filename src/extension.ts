@@ -1,7 +1,9 @@
 import * as crypto from 'node:crypto';
+import * as nodeFs from 'node:fs';
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import * as readline from 'node:readline';
 import * as vscode from 'vscode';
 
 interface ChatEntry {
@@ -19,6 +21,8 @@ interface TranscriptMessage {
 
 const VIEW_ID = 'codexBumper.chats';
 const CONFIG_SECTION = 'codexBumper';
+const SESSION_TITLE_SCAN_LINE_LIMIT = 200;
+const CHAT_TITLE_MAX_LENGTH = 72;
 
 export function activate(context: vscode.ExtensionContext): void {
   const store = new CodexHistoryStore();
@@ -103,7 +107,11 @@ class CodexHistoryStore {
     for (const entry of indexEntries) {
       const existing = chats.get(entry.id);
       if (!existing || compareUpdatedAt(entry.updatedAt, existing.updatedAt) >= 0) {
-        chats.set(entry.id, { ...existing, ...entry });
+        const merged = { ...existing, ...entry };
+        if (existing && isGenericTitle(entry.title, entry.id) && !isGenericTitle(existing.title, existing.id)) {
+          merged.title = existing.title;
+        }
+        chats.set(entry.id, merged);
       }
     }
 
@@ -115,9 +123,11 @@ class CodexHistoryStore {
 
       const existing = chats.get(id);
       const updatedAt = existing?.updatedAt ?? (await fileMtimeIso(sessionPath));
+      const inferredTitle =
+        !existing || isGenericTitle(existing.title, id) ? await this.inferSessionTitle(sessionPath) : undefined;
       chats.set(id, {
         id,
-        title: existing?.title ?? `Codex chat ${shortId(id)}`,
+        title: inferredTitle ?? existing?.title ?? genericTitle(id),
         updatedAt,
         sessionPath
       });
@@ -275,6 +285,45 @@ class CodexHistoryStore {
     return files.find((file) => extractSessionId(file) === id);
   }
 
+  private async inferSessionTitle(sessionPath: string): Promise<string | undefined> {
+    const input = nodeFs.createReadStream(sessionPath, { encoding: 'utf8' });
+    const lines = readline.createInterface({ input, crlfDelay: Infinity });
+    let firstUserMessage: string | undefined;
+    let scannedLines = 0;
+
+    try {
+      for await (const line of lines) {
+        scannedLines += 1;
+        const record = safeJsonParse(line);
+        const storedTitle = extractStoredThreadName(record);
+        if (storedTitle) {
+          return formatInferredTitle(storedTitle);
+        }
+
+        if (!firstUserMessage) {
+          const candidate = extractUserTitleSource(record);
+          if (candidate && !isTitleNoise(candidate)) {
+            firstUserMessage = candidate;
+          }
+        }
+
+        if (scannedLines >= SESSION_TITLE_SCAN_LINE_LIMIT) {
+          break;
+        }
+      }
+    } catch (error) {
+      if (isNotFound(error)) {
+        return undefined;
+      }
+      throw error;
+    } finally {
+      lines.close();
+      input.destroy();
+    }
+
+    return firstUserMessage ? formatInferredTitle(firstUserMessage) : undefined;
+  }
+
   private async readIndex(indexPath: string): Promise<ChatEntry[]> {
     try {
       const raw = await fs.readFile(indexPath, 'utf8');
@@ -292,7 +341,10 @@ class CodexHistoryStore {
 
         entries.push({
           id: record.id,
-          title: typeof record.thread_name === 'string' ? record.thread_name : `Codex chat ${shortId(record.id)}`,
+          title:
+            typeof record.thread_name === 'string' && record.thread_name.trim()
+              ? record.thread_name
+              : genericTitle(record.id),
           updatedAt: typeof record.updated_at === 'string' ? record.updated_at : undefined
         });
       }
@@ -431,6 +483,51 @@ function extractMessageText(content: unknown): string {
     .join('\n\n');
 }
 
+function extractStoredThreadName(record: any): string | undefined {
+  const title =
+    record?.type === 'event_msg' && record.payload?.type === 'thread_name_updated'
+      ? record.payload.thread_name
+      : undefined;
+  return typeof title === 'string' && title.trim() ? title : undefined;
+}
+
+function extractUserTitleSource(record: any): string | undefined {
+  if (record?.type === 'event_msg' && record.payload?.type === 'user_message') {
+    const message = record.payload.message;
+    return typeof message === 'string' && message.trim() ? message : undefined;
+  }
+
+  if (record?.type === 'response_item' && record.payload?.type === 'message' && record.payload.role === 'user') {
+    const message = extractMessageText(record.payload.content);
+    return message.trim() ? message : undefined;
+  }
+
+  return undefined;
+}
+
+function isTitleNoise(value: string): boolean {
+  const normalized = value.trimStart().toLowerCase();
+  return [
+    '<environment_context',
+    '<user_instructions',
+    '<permissions instructions',
+    '<collaboration_mode',
+    '<skills_instructions',
+    '<apps_instructions',
+    '<plugins_instructions',
+    '<recommended_plugins',
+    '# agents.md instructions'
+  ].some((prefix) => normalized.startsWith(prefix));
+}
+
+function formatInferredTitle(value: string): string {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= CHAT_TITLE_MAX_LENGTH) {
+    return normalized;
+  }
+  return `${normalized.slice(0, CHAT_TITLE_MAX_LENGTH - 3).trimEnd()}...`;
+}
+
 function extractSessionId(filePath: string): string | undefined {
   return /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$/i.exec(filePath)?.[1];
 }
@@ -458,11 +555,19 @@ function shortId(id: string): string {
   return id.slice(0, 8);
 }
 
+function genericTitle(id: string): string {
+  return `Codex chat ${shortId(id)}`;
+}
+
+function isGenericTitle(title: string, id: string): boolean {
+  return !title.trim() || title === genericTitle(id);
+}
+
 function expandHome(value: string): string {
   if (value === '~') {
     return os.homedir();
   }
-  if (value.startsWith(`~${path.sep}`)) {
+  if (/^~[\\/]/.test(value)) {
     return path.join(os.homedir(), value.slice(2));
   }
   return value;
