@@ -1,9 +1,13 @@
 # Changelog
 
+## 0.1.4
+
+- Stop force-reloading editor webviews after a bump because it can restart or destabilize Codex in Antigravity.
+- Continue opening the Codex sidebar while leaving history refresh to Codex's supported lifecycle.
+
 ## 0.1.3
 
-- Open the Codex sidebar and run the editor's Reload Webviews action automatically after a successful bump.
-- Keep the Codex extension host and app-server process running during refresh.
+- Attempt to refresh Codex history automatically by running the editor's Reload Webviews action after a successful bump.
 
 ## 0.1.2
 

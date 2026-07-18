@@ -24,7 +24,7 @@ Codex may keep older saved sessions locally while only showing a recent subset i
 - Adds a **Bump: say hi** action for each chat.
 - Bumping writes a tiny `hi` user turn plus assistant reply into the saved session file.
 - Bumping updates both the legacy `session_index.jsonl` index and the current Codex SQLite recency metadata.
-- Bumping opens and refreshes the Codex sidebar so the reordered history appears without restarting Codex.
+- Bumping opens the Codex sidebar after updating the chat's recency metadata.
 - Works for default Codex installs and lets users override the Codex home path.
 
 ## Why This Exists
@@ -62,9 +62,9 @@ For WSL, containers, and remote workspaces, Codex Bumper must run where the Code
 1. Open the **Codex Bumper** activity bar view.
 2. Select a chat to view its transcript.
 3. Click **Bump: say hi** from the transcript header or the chat row context action.
-4. Codex Bumper opens and refreshes the Codex sidebar. The bumped chat should appear near the top.
+4. Codex Bumper opens the Codex sidebar. Once Codex refreshes its history, the bumped chat appears near the top.
 
-The automatic refresh uses the editor's built-in **Reload Webviews** action. It does not restart the extension host or the Codex app-server process.
+Codex does not currently expose a supported command for refreshing its history list. Codex Bumper therefore does not force-reload Codex webviews; doing so can destabilize the Codex extension in some compatible editors. If the already-open list is stale, reload Codex once and the persisted bump will appear.
 
 ## Settings
 
@@ -95,7 +95,7 @@ npm run package
 The generated `.vsix` can be installed into Antigravity with:
 
 ```bash
-antigravity --install-extension codex-bumper-0.1.3.vsix
+antigravity --install-extension codex-bumper-0.1.4.vsix
 ```
 
 Publishing a GitHub release runs the repository's publish workflow for both Visual Studio Marketplace and Open VSX. An ordinary push to GitHub does not publish a marketplace update.
