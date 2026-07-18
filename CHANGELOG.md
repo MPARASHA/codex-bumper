@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3
+
+- Open the Codex sidebar and run the editor's Reload Webviews action automatically after a successful bump.
+- Keep the Codex extension host and app-server process running during refresh.
+
 ## 0.1.2
 
 - Update Codex's SQLite recency metadata so bumped chats actually return to the top of current history views.

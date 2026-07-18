@@ -22,6 +22,8 @@ interface TranscriptMessage {
 
 const VIEW_ID = 'codexBumper.chats';
 const CONFIG_SECTION = 'codexBumper';
+const CODEX_OPEN_SIDEBAR_COMMAND = 'chatgpt.openSidebar';
+const RELOAD_WEBVIEWS_COMMAND = 'workbench.action.webview.reloadWebviewAction';
 const SESSION_TITLE_SCAN_LINE_LIMIT = 200;
 const CHAT_TITLE_MAX_LENGTH = 72;
 
@@ -47,7 +49,12 @@ export function activate(context: vscode.ExtensionContext): void {
 
         const bumped = await store.bumpChat(chat);
         provider.refresh();
-        vscode.window.showInformationMessage(`Bumped "${bumped.title}" with hi.`);
+        const historyRefreshed = await refreshCodexHistory();
+        vscode.window.showInformationMessage(
+          historyRefreshed
+            ? `Bumped "${bumped.title}" with hi and refreshed Codex history.`
+            : `Bumped "${bumped.title}" with hi. Reopen Codex history to refresh it.`
+        );
       } catch (error) {
         vscode.window.showErrorMessage(`Codex Bumper could not bump the chat: ${errorMessage(error)}`);
       }
@@ -432,6 +439,22 @@ async function resolveChat(store: CodexHistoryStore, item?: ChatItem | string): 
   );
 
   return picked?.chat;
+}
+
+async function refreshCodexHistory(): Promise<boolean> {
+  try {
+    const commands = new Set(await vscode.commands.getCommands(true));
+    if (!commands.has(CODEX_OPEN_SIDEBAR_COMMAND) || !commands.has(RELOAD_WEBVIEWS_COMMAND)) {
+      return false;
+    }
+
+    await vscode.commands.executeCommand(CODEX_OPEN_SIDEBAR_COMMAND);
+    await vscode.commands.executeCommand(RELOAD_WEBVIEWS_COMMAND);
+    return true;
+  } catch (error) {
+    console.warn('Codex Bumper could not refresh the Codex history webview.', error);
+    return false;
+  }
 }
 
 async function openChatWebview(
